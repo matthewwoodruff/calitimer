@@ -16,6 +16,7 @@ interface Activity {
 }
 
 interface Status {
+    elapsedTime: number;
     time: number;
     state: 'Active' | 'Rest';
     set: number;
@@ -32,17 +33,18 @@ function SecondsInput({value, onChange}: InputProps) {
     )
 }
 
-const buildStatus = (currentTime: number, {active, rest, sets}: Activity): Status => {
+const buildStatus = (elapsedTime: number, {active, rest, sets}: Activity): Status => {
     const setTime = active + rest;
-    const remainder = currentTime % setTime
-    const set = Math.floor(currentTime / setTime) + 1
+    const remainder = elapsedTime % setTime
+    const set = Math.floor(elapsedTime / setTime) + 1
     const inActivePhase = remainder <= active;
     return {
+        elapsedTime,
         time: active - remainder + (inActivePhase ? 0 : rest),
         state: inActivePhase ? 'Active' : 'Rest',
         complete: sets + 1 === set,
         set,
-        next: (nextTime) => buildStatus(currentTime + nextTime, {active, rest, sets})
+        next: (nextTime) => buildStatus(elapsedTime + nextTime, {active, rest, sets})
     }
 }
 
@@ -104,12 +106,13 @@ function App() {
 
     const {active, rest, sets} = activity;
 
-    const {time, state, set} = status;
+    const {time, state, set, elapsedTime} = status;
 
     return (
         <div className={`App`}>
             <div className={`App-header ${inActivity ? state : ''}`}>
                 <div className="Time">{moment(time).format("mm:ss")}</div>
+                <div className="Set">{moment(elapsedTime).format("mm:ss")}</div>
                 <div className="Set">{set}/{sets}</div>
             </div>
             <button onClick={toggle}>{inActivity ? 'Stop' : 'Start'}</button>
