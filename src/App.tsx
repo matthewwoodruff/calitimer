@@ -87,11 +87,8 @@ function App() {
     }, [running, status])
 
     const toggle = () => {
-        if (inActivity) {
-            stop();
-        } else {
-            setRunning(true);
-        }
+        if (inActivity) stop();
+        else setRunning(true);
     }
 
     const updateActivity = (activity: Activity) => {
