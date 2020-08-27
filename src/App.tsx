@@ -65,7 +65,7 @@ function App() {
     const inActivity = running || paused;
 
     const stop = () => {
-        setStatus(defaultStatus);
+        setStatus(buildStatus(0, activity));
         setPaused(false);
         setRunning(false);
     }
