@@ -33,18 +33,19 @@ function SecondsInput({value, onChange}: InputProps) {
     )
 }
 
-const buildStatus = (elapsedTime: number, {active, rest, sets}: Activity): Status => {
+const buildStatus = (elapsedTime: number, activity: Activity): Status => {
+    const {active, rest, sets} = activity;
     const setTime = active + rest;
-    const remainder = elapsedTime % setTime
+    const timeIntoSet = elapsedTime % setTime
     const set = Math.floor(elapsedTime / setTime) + 1
-    const inActivePhase = remainder <= active;
+    const inActivePhase = timeIntoSet < active;
     return {
         elapsedTime,
-        time: active - remainder + (inActivePhase ? 0 : rest),
+        time: setTime - timeIntoSet - (inActivePhase ? rest : 0),
         state: inActivePhase ? 'Active' : 'Rest',
         complete: sets + 1 === set,
         set,
-        next: (nextTime) => buildStatus(elapsedTime + nextTime, {active, rest, sets})
+        next: (nextTime) => buildStatus(elapsedTime + nextTime, activity)
     }
 }
 
@@ -118,9 +119,9 @@ function App() {
                 Sets <input type="number"
                             value={sets}
                             min={1}
-                            onChange={e => updateActivity({sets: Number(e.target.value), active, rest})}/>
-                Active <SecondsInput value={active} onChange={value => updateActivity({active: value, sets, rest})}/>
-                Rest <SecondsInput value={rest} onChange={value => updateActivity({rest: value, active, sets})}/>
+                            onChange={e => updateActivity({sets: Number(e.target.value), ...activity})}/>
+                Active <SecondsInput value={active} onChange={value => updateActivity({active: value, ...activity})}/>
+                Rest <SecondsInput value={rest} onChange={value => updateActivity({rest: value, ...activity})}/>
             </>}
         </div>
     );
