@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import moment from "moment";
+import {useMachine} from '@xstate/react';
 import './App.css';
-
-const interval = 1000;
+import { calitimerMachine } from './App.machine';
 
 interface InputProps {
     value: number;
@@ -33,78 +33,16 @@ function SecondsInput({value, onChange}: InputProps) {
     )
 }
 
-const buildStatus = (elapsedTime: number, activity: Activity): Status => {
-    const {active, rest, sets} = activity;
-    const setTime = active + rest;
-    const timeIntoSet = elapsedTime % setTime
-    const set = Math.floor(elapsedTime / setTime) + 1
-    const inActivePhase = timeIntoSet < active;
-    return {
-        elapsedTime,
-        time: setTime - timeIntoSet - (inActivePhase ? rest : 0),
-        state: inActivePhase ? 'Active' : 'Rest',
-        complete: sets + 1 === set,
-        set,
-        next: (nextTime) => buildStatus(elapsedTime + nextTime, activity)
-    }
-}
-
-const defaultActivity = {
-    sets: 15,
-    active: 10000,
-    rest: 20000,
-};
-
-const defaultStatus = buildStatus(0, defaultActivity);
-
 function App() {
-    const [running, setRunning] = useState(false);
-    const [paused, setPaused] = useState(false);
-    const [activity, setActivity] = useState(defaultActivity)
-    const [status, setStatus] = useState(defaultStatus);
 
-    const inActivity = running || paused;
+    const [current, send] = useMachine(calitimerMachine);
 
-    const stop = () => {
-        setStatus(buildStatus(0, activity));
-        setPaused(false);
-        setRunning(false);
-    }
+    const {active, rest, sets, elapsedTime, workout} = current.context;
 
-    useEffect(() => {
-        if (status.complete) {
-            stop();
-            return;
-        }
+    const {time, state, set} = workout;
 
-        if (running) {
-            const intervalId = setTimeout(() => {
-                setStatus(status => status.next(interval))
-            }, interval);
-            return () => clearTimeout(intervalId);
-        }
-
-        return;
-    }, [running, status])
-
-    const toggle = () => {
-        if (inActivity) stop();
-        else setRunning(true);
-    }
-
-    const updateActivity = (activity: Activity) => {
-        setStatus(buildStatus(0, activity));
-        setActivity(activity);
-    }
-
-    const togglePause = () => {
-        setPaused(!paused);
-        setRunning(!running);
-    }
-
-    const {active, rest, sets} = activity;
-
-    const {time, state, set, elapsedTime} = status;
+    const inActivity = current.matches('active');
+    const paused = current.matches('running.paused');
 
     return (
         <div className={`App`}>
@@ -113,15 +51,15 @@ function App() {
                 <div className="Set">{moment(elapsedTime).format("mm:ss")}</div>
                 <div className="Set">{set}/{sets}</div>
             </div>
-            <button onClick={toggle}>{inActivity ? 'Stop' : 'Start'}</button>
-            {inActivity && <button onClick={togglePause}>{paused ? 'Resume' : 'Pause'}</button>}
+            <button onClick={() => send('TOGGLE_START')}>{inActivity ? 'Stop' : 'Start'}</button>
+            {inActivity && <button onClick={() => send('TOGGLE_PAUSE')}>{paused ? 'Resume' : 'Pause'}</button>}
             {!inActivity && <>
                 Sets <input type="number"
                             value={sets}
                             min={1}
-                            onChange={e => updateActivity({sets: Number(e.target.value), ...activity})}/>
-                Active <SecondsInput value={active} onChange={value => updateActivity({active: value, ...activity})}/>
-                Rest <SecondsInput value={rest} onChange={value => updateActivity({rest: value, ...activity})}/>
+                            onChange={e => send({type: 'UPDATE_SETS', data: Number(e.target.value)})}/>
+                Active <SecondsInput value={active} onChange={data => send({type: 'UPDATE_ACTIVE', data})}/>
+                Rest <SecondsInput value={rest} onChange={data => send({type: 'UPDATE_REST', data})}/>
             </>}
         </div>
     );
