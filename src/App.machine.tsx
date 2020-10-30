@@ -47,8 +47,9 @@ const buildStatus = (elapsedTime: number, active: number, sets: number, rest: nu
     const timeIntoSet = elapsedTime % setTime
     const set = Math.floor((elapsedTime - rest) / setTime) + 1
     const inActivePhase = timeIntoSet >= rest;
+    let time = setTime - timeIntoSet - (inActivePhase ? 0 : active);
     return {
-        time: setTime - timeIntoSet - (inActivePhase ? 0 : active),
+        time: Math.ceil(time/1000)*1000,
         state: inActivePhase ? 'Active' : 'Rest',
         complete: sets + 1 === set,
         set,
