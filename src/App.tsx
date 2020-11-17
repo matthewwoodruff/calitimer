@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import moment from "moment";
 import {useMachine} from '@xstate/react';
 import './App.css';
-import { calitimerMachine } from './App.machine';
+import {calitimerMachine} from './App.machine';
 
 interface InputProps {
     value: number;
@@ -42,25 +42,29 @@ function App() {
     const {time, state, set} = workout;
 
     const inActivity = current.matches('active');
-    const paused = current.matches('running.paused');
-
+    const paused = current.matches('active.paused');
     return (
         <div className={`App`}>
             <div className={`App-header ${inActivity ? state : ''}`}>
                 <div className="Time">{moment(time).format("mm:ss")}</div>
                 <div className="Set">{moment(elapsedTime).format("mm:ss")}</div>
                 <div className="Set">{set}/{sets}</div>
+                <div className="controls">
+                    <div className="buttons">
+                        <button onClick={() => send('TOGGLE_START')}>{inActivity ? 'Stop' : 'Start'}</button>
+                        {inActivity && <button onClick={() => send('TOGGLE_PAUSE')}>{paused ? 'Resume' : 'Pause'}</button>}
+                    </div>
+                    {!inActivity && <>
+                        Sets <input type="number"
+                                    value={sets}
+                                    min={1}
+                                    onChange={e => send({type: 'UPDATE_SETS', data: Number(e.target.value)})}/>
+                        Active <SecondsInput value={active} onChange={data => send({type: 'UPDATE_ACTIVE', data})}/>
+                        Rest <SecondsInput value={rest} onChange={data => send({type: 'UPDATE_REST', data})}/>
+                    </>}
+                </div>
             </div>
-            <button onClick={() => send('TOGGLE_START')}>{inActivity ? 'Stop' : 'Start'}</button>
-            {inActivity && <button onClick={() => send('TOGGLE_PAUSE')}>{paused ? 'Resume' : 'Pause'}</button>}
-            {!inActivity && <>
-                Sets <input type="number"
-                            value={sets}
-                            min={1}
-                            onChange={e => send({type: 'UPDATE_SETS', data: Number(e.target.value)})}/>
-                Active <SecondsInput value={active} onChange={data => send({type: 'UPDATE_ACTIVE', data})}/>
-                Rest <SecondsInput value={rest} onChange={data => send({type: 'UPDATE_REST', data})}/>
-            </>}
+
         </div>
     );
 }

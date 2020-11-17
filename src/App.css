@@ -1,6 +1,6 @@
 .App-header {
   background-color: #282c34;
-  min-height: 90vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,4 +18,30 @@
 
 .Active {
   background-color: green;
+}
+
+.controls {
+  margin-top: 5vh;
+  font-size: 3vmin;
+}
+
+.controls input {
+  padding: 1vmin;
+  font-size: 3vmin;
+  margin: 0 1vmin 0 1vmin;
+  border-radius: 0.5vmin;
+  width: 10vmin;
+  text-align: right;
+}
+
+.buttons {
+  text-align: center;
+  margin-bottom: 1vmin;
+}
+
+.buttons button {
+  font-size: 3vmin;
+  padding: 1vmin;
+  border-radius: 0.5vmin;
+  margin-right: 1vmin;
 }

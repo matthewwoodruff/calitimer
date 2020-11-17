@@ -42,12 +42,31 @@ type Event =
     | { type: 'UPDATE_WORKOUT' }
     | { type: 'STOP' };
 
+const a=new AudioContext() // browsers limit the number of concurrent audio contexts, so you better re-use'em
+
+function beep(vol: number, freq: number, duration: number){
+    const v=a.createOscillator()
+    const u=a.createGain()
+    v.connect(u)
+    v.frequency.value=freq
+    v.type="square"
+    u.connect(a.destination)
+    u.gain.value=vol*0.01
+    v.start(a.currentTime)
+    v.stop(a.currentTime+duration*0.001)
+}
+
+
 const buildStatus = (elapsedTime: number, active: number, sets: number, rest: number): Workout => {
     const setTime = active + rest;
     const timeIntoSet = elapsedTime % setTime
     const set = Math.floor((elapsedTime - rest) / setTime) + 1
     const inActivePhase = timeIntoSet >= rest;
     let time = setTime - timeIntoSet - (inActivePhase ? 0 : active);
+
+    // if (inActivePhase && timeIntoSet === active) beep(10, 500, 1000);
+    // else if (!inActivePhase && timeIntoSet === rest) beep(10, 400, 1000)
+
     return {
         time: Math.ceil(time/1000)*1000,
         state: inActivePhase ? 'Active' : 'Rest',
@@ -71,7 +90,9 @@ export const calitimerMachine = Machine<Context, AppStateSchema, Event>({
             id: 'idle',
             on: {
                 UPDATE_SETS: [{
-                    actions: [assign((c, e) => ({sets: e.data}))],
+                    actions: [
+                        assign((c, e) => ({sets: e.data}))
+                    ],
                 }],
                 UPDATE_ACTIVE: [{
                     actions: [assign((c, e) => ({active: e.data}))],
@@ -125,6 +146,7 @@ export const calitimerMachine = Machine<Context, AppStateSchema, Event>({
                 paused: {
                     on: {
                         TOGGLE_PAUSE: 'running',
+                        TOGGLE_START: '#idle',
                     }
                 }
             },
