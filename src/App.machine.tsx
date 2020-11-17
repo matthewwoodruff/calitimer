@@ -42,20 +42,6 @@ type Event =
     | { type: 'UPDATE_WORKOUT' }
     | { type: 'STOP' };
 
-const a=new AudioContext() // browsers limit the number of concurrent audio contexts, so you better re-use'em
-
-function beep(vol: number, freq: number, duration: number){
-    const v=a.createOscillator()
-    const u=a.createGain()
-    v.connect(u)
-    v.frequency.value=freq
-    v.type="square"
-    u.connect(a.destination)
-    u.gain.value=vol*0.01
-    v.start(a.currentTime)
-    v.stop(a.currentTime+duration*0.001)
-}
-
 
 const buildStatus = (elapsedTime: number, active: number, sets: number, rest: number): Workout => {
     const setTime = active + rest;
@@ -74,6 +60,23 @@ const buildStatus = (elapsedTime: number, active: number, sets: number, rest: nu
         set,
     }
 }
+
+const showNotification = (title: string) => {
+    Notification.requestPermission()
+        .then(notificationPermission => {
+            if (notificationPermission === 'granted') {
+                new Notification(title);
+
+                const speech = new SpeechSynthesisUtterance();
+                speech.lang = "en-GB";
+                speech.text = title;
+                speech.volume = 1;
+                speech.rate = 1;
+                speech.pitch = 1;
+                window.speechSynthesis.speak(speech);
+            }
+        })
+};
 
 export const calitimerMachine = Machine<Context, AppStateSchema, Event>({
     initial: 'idle',
@@ -151,5 +154,14 @@ export const calitimerMachine = Machine<Context, AppStateSchema, Event>({
                 }
             },
         }
+    }
+}, {
+    actions: {
+        showStartNotification: () => {
+            showNotification("Begin");
+        },
+        showRestNotification: () => {
+            showNotification("Rest");
+        },
     }
 })
