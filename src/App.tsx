@@ -46,9 +46,9 @@ function App() {
     return (
         <div className={`App`}>
             <div className={`App-header ${inActivity ? state : ''}`}>
-                <div className="Time">{moment(time).format("mm:ss")}</div>
-                <div className="Set">{moment(elapsedTime).format("mm:ss")}</div>
-                <div className="Set">{set}/{sets}</div>
+                <code className="Time">{moment(time).format("mm:ss")}</code>
+                <code className="Set">{moment(elapsedTime).format("mm:ss")}</code>
+                <code className="Set">{set}/{sets}</code>
                 <div className="controls">
                     <div className="buttons">
                         <button onClick={() => send('TOGGLE_START')}>{inActivity ? 'Stop' : 'Start'}</button>
