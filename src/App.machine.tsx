@@ -109,15 +109,14 @@ export const calitimerMachine = Machine<Context, AppStateSchema, Event>({
         active: {
             id: 'active',
             initial: 'running',
-            entry: assign((c, e) => ({elapsedTime: 0, previousTime: Date.now()})),
+            entry: assign((c, e) => ({elapsedTime: 0})),
             states: {
                 running: {
+                    entry: assign((c, e) => ({previousTime: Date.now()})),
                     invoke: {
                         id: 'interval',
                         src: (context, event) => (callback, onReceive) => {
-                            const id = setInterval(() => {
-                                callback('UPDATE_WORKOUT')
-                            }, 100);
+                            const id = setInterval(() => callback('UPDATE_WORKOUT'), 100);
                             return () => clearInterval(id);
                         }
                     },
